@@ -14,14 +14,14 @@ const validateEmail = (req, res, next) => {
 
   if (!email) {
     return res
-    .status(400)
-    .json({ message: 'O campo "email" é obrigatório' });
+      .status(400)
+      .json({ message: 'O campo "email" é obrigatório' });
   }
 
   if (!(/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/).test(email)) {
     return res
-    .status(400)
-    .json({ message: 'O "email" deve ter o formato "email@email.com"' });
+      .status(400)
+      .json({ message: 'O "email" deve ter o formato "email@email.com"' });
   }
 
   next();
@@ -32,14 +32,64 @@ const validatePassword = (req, res, next) => {
 
   if (!password) {
     return res
-    .status(400)
-    .json({ message: 'O campo "password" é obrigatório' });
+      .status(400)
+      .json({ message: 'O campo "password" é obrigatório' });
   }
 
   if (password.length < 6) {
     return res
+      .status(400)
+      .json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+
+  next();
+};
+
+const validateToken = (req, res, next) => {
+  const { authorization } = req.headers;
+
+  if (!authorization) {
+    res.status(401).json({ message: 'Token não encontrado' });
+  }
+
+  if (authorization.length !== 16) {
+    res.status(401).json({ message: 'Token inválido' });
+  }
+
+  next();
+};
+
+const validateName = (req, res, next) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "name" é obrigatório' });
+  }
+
+  if (name.length < 3) {
+    return res
     .status(400)
-    .json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+    .json({ message: 'O "name" deve ter pelo menos 3 caracteres' });
+  }
+
+  next();
+};
+
+const validateAge = (req, res, next) => {
+  const { age } = req.body;
+
+  if (!age) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "age" é obrigatório' });
+  }
+
+  if (Number(age) < 18) {
+    return res
+      .status(400)
+      .json({ message: 'A pessoa palestrante deve ser maior de idade' });
   }
 
   next();
@@ -80,6 +130,11 @@ app.post('/login', validateEmail, validatePassword, async (_req, res) => {
   const token = crypto.randomBytes(8).toString('hex');
 
   res.status(200).json({ token });
+});
+
+app.post('/talker', validateToken, validateName, validateAge, (req, res) => {
+  const registeredPerson = req.body;
+  res.status(201).json(registeredPerson);
 });
 
 app.listen(PORT, () => {
