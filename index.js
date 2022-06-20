@@ -14,9 +14,29 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (req, res) => {
-  const registeredPeople = await fs.readFile('./talker.json', 'utf8');
+  const registeredPeople = await fs
+    .readFile('./talker.json', 'utf8');
+  
+  const jsonRegisteredPeople = JSON.parse(registeredPeople);
 
-  res.status(200).json(JSON.parse(registeredPeople));
+  res.status(200).json(jsonRegisteredPeople);
+});
+
+app.get('/talker/:id', async (req, res) => {
+  const { id } = req.params;
+  const registeredPeople = await fs
+    .readFile('./talker.json', 'utf8');
+  
+  const jsonRegisteredPeople = JSON.parse(registeredPeople);
+
+  const registeredPerson = jsonRegisteredPeople
+    .find((person) => person.id === Number(id))
+  
+  if (registeredPerson) {
+    return res.status(200).json(registeredPerson);
+  }
+
+  res.status(404).json({ "message": "Pessoa palestrante não encontrada" });  
 });
 
 app.listen(PORT, () => {
