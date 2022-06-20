@@ -49,11 +49,11 @@ const validateToken = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
-    res.status(401).json({ message: 'Token não encontrado' });
+    return res.status(401).json({ message: 'Token não encontrado' });
   }
 
   if (authorization.length !== 16) {
-    res.status(401).json({ message: 'Token inválido' });
+    return res.status(401).json({ message: 'Token inválido' });
   }
 
   next();
@@ -70,8 +70,8 @@ const validateName = (req, res, next) => {
 
   if (name.length < 3) {
     return res
-    .status(400)
-    .json({ message: 'O "name" deve ter pelo menos 3 caracteres' });
+      .status(400)
+      .json({ message: 'O "name" deve ter pelo menos 3 caracteres' });
   }
 
   next();
@@ -90,6 +90,55 @@ const validateAge = (req, res, next) => {
     return res
       .status(400)
       .json({ message: 'A pessoa palestrante deve ser maior de idade' });
+  }
+
+  next();
+};
+
+const validateWatchedAt = (req, res, next) => {
+  const { talk: { watchedAt } } = req.body;
+
+  if (!watchedAt) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "watchedAt" é obrigatório' });
+  }
+
+  if (!/^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/
+    .test(watchedAt)) {
+      return res
+        .status(400)
+        .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
+    }
+
+  next();
+};
+
+const validateRate = (req, res, next) => {
+  const { talk: { rate } } = req.body;
+
+  if (!rate) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "rate" é obrigatório' });
+  }
+
+  if (!(rate >= 1 && rate <= 5)) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
+  }
+
+  next();
+};
+
+const validateTalk = (req, res, next) => {
+  const { talk } = req.body;
+
+  if (!talk) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "talk" é obrigatório' });
   }
 
   next();
@@ -132,9 +181,26 @@ app.post('/login', validateEmail, validatePassword, async (_req, res) => {
   res.status(200).json({ token });
 });
 
-app.post('/talker', validateToken, validateName, validateAge, (req, res) => {
-  const registeredPerson = req.body;
-  res.status(201).json(registeredPerson);
+app.post('/talker',
+  validateToken,
+  validateName,
+  validateAge,
+  validateTalk,
+  validateWatchedAt,
+  validateRate,
+  async (req, res) => {
+    const registeredPeople = await fs
+      .readFile('./talker.json', 'utf8');
+  
+    const jsonRegisteredPeople = JSON.parse(registeredPeople);
+    const registeredPerson = req.body;
+    const id = jsonRegisteredPeople.length + 1;
+
+    jsonRegisteredPeople.push({ id, ...registeredPerson });
+
+    await fs.writeFile('./talker.json', JSON.stringify(jsonRegisteredPeople));
+
+    res.status(201).json(jsonRegisteredPeople[id - 1]);
 });
 
 app.listen(PORT, () => {
