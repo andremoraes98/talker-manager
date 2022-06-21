@@ -108,11 +108,11 @@ app.put('/talker/:id',
     const { id } = req.params;
     const actualPerson = req.body;
 
-    jsonRegisteredPeople.splice(Number(id) - 1, 1, { id, ...actualPerson });
+    jsonRegisteredPeople.splice(Number(id) - 1, 1, { id: Number(id), ...actualPerson });
 
     await fs.writeFile(FILE_NAME, JSON.stringify(jsonRegisteredPeople));
 
-    res.status(200).json(jsonRegisteredPeople);
+    res.status(200).json({ id: Number(id), ...actualPerson });
 });
 
 app.delete('/talker/:id', validateToken, async (req, res) => {
