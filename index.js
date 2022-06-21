@@ -8,6 +8,7 @@ app.use(bodyParser.json());
 
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
+const FILE_NAME = './talker.json';
 
 const validateEmail = (req, res, next) => {
   const { email } = req.body;
@@ -117,7 +118,7 @@ const validateWatchedAt = (req, res, next) => {
 const validateRate = (req, res, next) => {
   const { talk: { rate } } = req.body;
 
-  if (!rate) {
+  if ([undefined, null, ''].includes(rate)) {
     return res
       .status(400)
       .json({ message: 'O campo "rate" é obrigatório' });
@@ -151,7 +152,7 @@ app.get('/', (_request, response) => {
 
 app.get('/talker', async (req, res) => {
   const registeredPeople = await fs
-    .readFile('./talker.json', 'utf8');
+    .readFile(FILE_NAME, 'utf8');
   
   const jsonRegisteredPeople = JSON.parse(registeredPeople);
 
@@ -161,7 +162,7 @@ app.get('/talker', async (req, res) => {
 app.get('/talker/:id', async (req, res) => {
   const { id } = req.params;
   const registeredPeople = await fs
-    .readFile('./talker.json', 'utf8');
+    .readFile(FILE_NAME, 'utf8');
   
   const jsonRegisteredPeople = JSON.parse(registeredPeople);
 
@@ -190,7 +191,7 @@ app.post('/talker',
   validateRate,
   async (req, res) => {
     const registeredPeople = await fs
-      .readFile('./talker.json', 'utf8');
+      .readFile(FILE_NAME, 'utf8');
   
     const jsonRegisteredPeople = JSON.parse(registeredPeople);
     const registeredPerson = req.body;
@@ -198,9 +199,31 @@ app.post('/talker',
 
     jsonRegisteredPeople.push({ id, ...registeredPerson });
 
-    await fs.writeFile('./talker.json', JSON.stringify(jsonRegisteredPeople));
+    await fs.writeFile(FILE_NAME, JSON.stringify(jsonRegisteredPeople));
 
     res.status(201).json(jsonRegisteredPeople[id - 1]);
+});
+
+app.put('/talker/:id',
+  validateToken,
+  validateName,
+  validateAge,
+  validateTalk,
+  validateWatchedAt,
+  validateRate,
+  async (req, res) => {
+    const registeredPeople = await fs
+      .readFile(FILE_NAME, 'utf8');
+  
+    const jsonRegisteredPeople = JSON.parse(registeredPeople);
+    const { id } = req.params;
+    const actualPerson = req.body;
+
+    jsonRegisteredPeople.splice(Number(id) - 1, 1, { id, ...actualPerson });
+
+    await fs.writeFile(FILE_NAME, JSON.stringify(jsonRegisteredPeople));
+
+    res.status(200).json(jsonRegisteredPeople[Number(id) - 1]);
 });
 
 app.listen(PORT, () => {
