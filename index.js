@@ -221,7 +221,7 @@ app.put('/talker/:id',
 
     jsonRegisteredPeople.splice(Number(id) - 1, 1, { id, ...actualPerson });
 
-    await fs.writeFile(FILE_NAME, JSON.stringify(jsonRegisteredPeople));
+    await fs.writeFile(FILE_NAME, JSON.stringify([{ id, ...actualPerson }]));
 
     res.status(200).json(jsonRegisteredPeople[Number(id) - 1]);
 });
