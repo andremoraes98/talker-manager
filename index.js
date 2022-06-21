@@ -27,12 +27,12 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker/search', validateToken, validateSearchName, async (req, res) => {
-  const { name } = req.query;
+  const { q } = req.query;
   const registeredPeople = await fs.readFile(FILE_NAME, 'utf-8');
   const jsonRegisteredPeople = JSON.parse(registeredPeople);
 
   const response = jsonRegisteredPeople
-    .filter((person) => person.name.includes(name));
+    .filter((person) => person.name.includes(q));
 
   await fs.writeFile(FILE_NAME, JSON.stringify(response));
 

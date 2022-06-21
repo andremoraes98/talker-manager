@@ -138,11 +138,11 @@ const validateTalk = (req, res, next) => {
 };
 
 const validateSearchName = async (req, res, next) => {
-  const { name } = req.query;
+  const { q } = req.query;
 
   const registeredPeople = await fs.readFile(FILE_NAME, 'utf-8');
 
-  if (!name) {
+  if (!q) {
     return res.status(200).json(JSON.parse(registeredPeople));
   }
 
