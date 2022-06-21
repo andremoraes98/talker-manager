@@ -226,6 +226,20 @@ app.put('/talker/:id',
     res.status(200).json(jsonRegisteredPeople[Number(id) - 1]);
 });
 
+app.delete('/talker/:id', validateToken, async (req, res) => {
+  const { id } = req.params;
+
+  const registeredPeople = await fs.readFile(FILE_NAME, 'utf-8');
+  const jsonRegisteredPeople = JSON.parse(registeredPeople);
+
+  const actualPeople = jsonRegisteredPeople
+    .filter((person) => person.id !== Number(id));
+
+  await fs.writeFile(FILE_NAME, JSON.stringify(actualPeople));
+
+  res.status(204).json();
+});
+
 app.listen(PORT, () => {
   console.log(`Online na porta ${PORT}`);
 });
